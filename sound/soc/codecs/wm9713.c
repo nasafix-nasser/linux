@@ -70,48 +70,45 @@ static const u16 wm9713_reg[] = {
 
 static const char *wm9713_mic_mixer[] = {"Stereo", "Mic 1", "Mic 2", "Mute"};
 static const char *wm9713_rec_mux[] = {"Stereo", "Left", "Right", "Mute"};
-static const char *wm9713_rec_src[] =
-	{"Mic 1", "Mic 2", "Line", "Mono In", "Headphone", "Speaker",
-	"Mono Out", "Zh"};
+static const char *wm9713_rec_src[] = {"Mic 1", "Mic 2", "Line", "Mono In",
+	"Headphone", "Speaker",	"Mono Out", "Zh"};
 static const char *wm9713_rec_gain[] = {"+1.5dB Steps", "+0.75dB Steps"};
 static const char *wm9713_alc_select[] = {"None", "Left", "Right", "Stereo"};
 static const char *wm9713_mono_pga[] = {"Vmid", "Zh", "Mono", "Inv",
 	"Mono Vmid", "Inv Vmid"};
-static const char *wm9713_spk_pga[] =
-	{"Vmid", "Zh", "Headphone", "Speaker", "Inv", "Headphone Vmid",
-	"Speaker Vmid", "Inv Vmid"};
+static const char *wm9713_spk_pga[] = {"Vmid", "Zh", "Headphone", "Speaker",
+	"Inv", "Headphone Vmid", "Speaker Vmid", "Inv Vmid"};
 static const char *wm9713_hp_pga[] = {"Vmid", "Zh", "Headphone",
 	"Headphone Vmid"};
 static const char *wm9713_out3_pga[] = {"Vmid", "Zh", "Inv 1", "Inv 1 Vmid"};
 static const char *wm9713_out4_pga[] = {"Vmid", "Zh", "Inv 2", "Inv 2 Vmid"};
-static const char *wm9713_dac_inv[] =
-	{"Off", "Mono", "Speaker", "Left Headphone", "Right Headphone",
-	"Headphone Mono", "NC", "Vmid"};
+static const char *wm9713_dac_inv[] = {"Off", "Mono", "Speaker",
+	"Left Headphone", "Right Headphone", "Headphone Mono", "NC", "Vmid"};
 static const char *wm9713_bass[] = {"Linear Control", "Adaptive Boost"};
 static const char *wm9713_ng_type[] = {"Constant Gain", "Mute"};
 static const char *wm9713_mic_select[] = {"Mic 1", "Mic 2 A", "Mic 2 B"};
 static const char *wm9713_micb_select[] = {"MPB", "MPA"};
 
 static const struct soc_enum wm9713_enum[] = {
-SOC_ENUM_SINGLE(AC97_LINE, 3, 4, wm9713_mic_mixer), /* record mic mixer 0 */
-SOC_ENUM_SINGLE(AC97_VIDEO, 14, 4, wm9713_rec_mux), /* record mux hp 1 */
-SOC_ENUM_SINGLE(AC97_VIDEO, 9, 4, wm9713_rec_mux),  /* record mux mono 2 */
-SOC_ENUM_SINGLE(AC97_VIDEO, 3, 8, wm9713_rec_src),  /* record mux left 3 */
-SOC_ENUM_SINGLE(AC97_VIDEO, 0, 8, wm9713_rec_src),  /* record mux right 4*/
-SOC_ENUM_DOUBLE(AC97_CD, 14, 6, 2, wm9713_rec_gain), /* record step size 5 */
-SOC_ENUM_SINGLE(AC97_PCI_SVID, 14, 4, wm9713_alc_select), /* alc source select 6*/
-SOC_ENUM_SINGLE(AC97_REC_GAIN, 14, 4, wm9713_mono_pga), /* mono input select 7 */
-SOC_ENUM_SINGLE(AC97_REC_GAIN, 11, 8, wm9713_spk_pga), /* speaker left input select 8 */
-SOC_ENUM_SINGLE(AC97_REC_GAIN, 8, 8, wm9713_spk_pga), /* speaker right input select 9 */
-SOC_ENUM_SINGLE(AC97_REC_GAIN, 6, 3, wm9713_hp_pga), /* headphone left input 10 */
-SOC_ENUM_SINGLE(AC97_REC_GAIN, 4, 3, wm9713_hp_pga), /* headphone right input 11 */
+SOC_ENUM_SINGLE(AC97_LINE, 3, 4, wm9713_mic_mixer), /* mic mixer 0 */
+SOC_ENUM_SINGLE(AC97_VIDEO, 14, 4, wm9713_rec_mux), /* mux hp 1 */
+SOC_ENUM_SINGLE(AC97_VIDEO, 9, 4, wm9713_rec_mux),  /* mux mono 2 */
+SOC_ENUM_SINGLE(AC97_VIDEO, 3, 8, wm9713_rec_src),  /* mux left 3 */
+SOC_ENUM_SINGLE(AC97_VIDEO, 0, 8, wm9713_rec_src),  /* mux right 4*/
+SOC_ENUM_DOUBLE(AC97_CD, 14, 6, 2, wm9713_rec_gain), /* step size 5 */
+SOC_ENUM_SINGLE(AC97_PCI_SVID, 14, 4, wm9713_alc_select), /* alc source 6*/
+SOC_ENUM_SINGLE(AC97_REC_GAIN, 14, 4, wm9713_mono_pga), /* mono input 7 */
+SOC_ENUM_SINGLE(AC97_REC_GAIN, 11, 8, wm9713_spk_pga), /* left input 8 */
+SOC_ENUM_SINGLE(AC97_REC_GAIN, 8, 8, wm9713_spk_pga), /* right input 9 */
+SOC_ENUM_SINGLE(AC97_REC_GAIN, 6, 3, wm9713_hp_pga), /* hp left input 10 */
+SOC_ENUM_SINGLE(AC97_REC_GAIN, 4, 3, wm9713_hp_pga), /* hp right input 11 */
 SOC_ENUM_SINGLE(AC97_REC_GAIN, 2, 4, wm9713_out3_pga), /* out 3 source 12 */
 SOC_ENUM_SINGLE(AC97_REC_GAIN, 0, 4, wm9713_out4_pga), /* out 4 source 13 */
 SOC_ENUM_SINGLE(AC97_REC_GAIN_MIC, 13, 8, wm9713_dac_inv), /* dac invert 1 14 */
 SOC_ENUM_SINGLE(AC97_REC_GAIN_MIC, 10, 8, wm9713_dac_inv), /* dac invert 2 15 */
 SOC_ENUM_SINGLE(AC97_GENERAL_PURPOSE, 15, 2, wm9713_bass), /* bass control 16 */
 SOC_ENUM_SINGLE(AC97_PCI_SVID, 5, 2, wm9713_ng_type), /* noise gate type 17 */
-SOC_ENUM_SINGLE(AC97_3D_CONTROL, 12, 3, wm9713_mic_select), /* mic selection 18 */
+SOC_ENUM_SINGLE(AC97_3D_CONTROL, 12, 3, wm9713_mic_select), /* mic select 18 */
 SOC_ENUM_SINGLE(MICB_MUX, 0, 2, wm9713_micb_select), /* mic selection 19 */
 };
 
@@ -651,6 +648,7 @@ static int wm9713_add_widgets(struct snd_soc_codec *codec)
 				  ARRAY_SIZE(wm9713_dapm_widgets));
 
 	snd_soc_dapm_add_routes(codec, audio_map, ARRAY_SIZE(audio_map));
+	snd_soc_dapm_new_widgets(codec);
 
 	return 0;
 }
@@ -957,6 +955,28 @@ static int wm9713_set_dai_fmt(struct snd_soc_dai *codec_dai,
 	return 0;
 }
 
+static int wm9713_hifi_hw_params(struct snd_pcm_substream *substream,
+				struct snd_pcm_hw_params *params,
+				struct snd_soc_dai *dai)
+{
+	struct snd_soc_codec *codec = dai->codec;
+	ac97_write(codec, AC97_POWERDOWN, 0x0000);
+	ac97_write(codec, AC97_PHONE, 0x0808);
+	ac97_write(codec, AC97_EXTENDED_MID, 0xf803);
+	ac97_write(codec, AC97_EXTENDED_MSTATUS, 0xb990);
+
+	ac97_write(codec, AC97_MASTER, 0x8080);
+	ac97_write(codec, AC97_HEADPHONE, 0x0606);
+	ac97_write(codec, AC97_REC_GAIN, 0x00aa);
+#ifdef CONFIG_SOUND_WM9713_INPUT_STREAM_MIC
+	ac97_write(codec, 0x5c, 0x0002);
+	ac97_write(codec, AC97_LINE, 0x0068);
+	ac97_write(codec, AC97_VIDEO, 0xfe00);
+#else
+	ac97_write(codec, AC97_VIDEO, 0xd612);
+#endif
+	return 0;
+}
 static int wm9713_pcm_hw_params(struct snd_pcm_substream *substream,
 				struct snd_pcm_hw_params *params,
 				struct snd_soc_dai *dai)
@@ -1038,6 +1058,7 @@ static int ac97_aux_prepare(struct snd_pcm_substream *substream,
 	 SNDRV_PCM_FORMAT_S24_LE)
 
 static struct snd_soc_dai_ops wm9713_dai_ops_hifi = {
+	.hw_params	= wm9713_hifi_hw_params,
 	.prepare	= ac97_hifi_prepare,
 	.set_clkdiv	= wm9713_set_dai_clkdiv,
 	.set_pll	= wm9713_set_dai_pll,
@@ -1266,6 +1287,11 @@ static int wm9713_soc_probe(struct platform_device *pdev)
 	reg = ac97_read(codec, AC97_CD) & 0x7fff;
 	ac97_write(codec, AC97_CD, reg);
 
+	reg = ac97_read(codec, AC97_EXTENDED_MSTATUS) & 0xbfff;
+	ac97_write(codec, AC97_EXTENDED_MSTATUS, reg);
+	
+	ac97_write(codec, 0x5c, 0x80);
+
 	snd_soc_add_controls(codec, wm9713_snd_ac97_controls,
 				ARRAY_SIZE(wm9713_snd_ac97_controls));
 	wm9713_add_widgets(codec);
@@ -1307,10 +1333,10 @@ static int wm9713_soc_remove(struct platform_device *pdev)
 }
 
 struct snd_soc_codec_device soc_codec_dev_wm9713 = {
-	.probe = 	wm9713_soc_probe,
-	.remove = 	wm9713_soc_remove,
+	.probe =	wm9713_soc_probe,
+	.remove =	wm9713_soc_remove,
 	.suspend =	wm9713_soc_suspend,
-	.resume = 	wm9713_soc_resume,
+	.resume =	wm9713_soc_resume,
 };
 EXPORT_SYMBOL_GPL(soc_codec_dev_wm9713);
 

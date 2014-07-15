@@ -150,6 +150,7 @@ enum pl330_reqtype {
 	MEMTODEV,
 	DEVTOMEM,
 	DEVTODEV,
+	MEMTOMEM_NOBARRIER,
 };
 
 /* A request defining Scatter-Gather List ending with NULL xfer. */

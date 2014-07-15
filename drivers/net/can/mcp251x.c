@@ -595,7 +595,7 @@ static int mcp251x_hw_reset(struct spi_device *spi)
 				" enter in conf mode after reset\n");
 			return -EBUSY;
 		}
-	}
+	} 
 	return 0;
 }
 

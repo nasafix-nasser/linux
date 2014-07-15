@@ -15,6 +15,7 @@
 #include <linux/io.h>
 #include <linux/slab.h>
 #include <linux/platform_device.h>
+#include <linux/clk.h>
 
 #include <asm/hardware/pl330.h>
 
@@ -34,6 +35,7 @@ struct s3c_pl330_dmac {
 	struct list_head	node;
 	struct pl330_info	*pi;
 	struct kmem_cache	*kmcache;
+	struct clk		*dmaclk;
 };
 
 /**
@@ -432,7 +434,7 @@ static inline int s3c_pl330_submit(struct s3c_pl330_chan *ch,
 		r->x = &xfer->px;
 
 		/* Use max bandwidth for M<->M xfers */
-		if (r->rqtype == MEMTOMEM) {
+		if (r->rqtype == MEMTOMEM || r->rqtype == MEMTOMEM_NOBARRIER) {
 			struct pl330_info *pi = xfer->chan->dmac->pi;
 			int burst = 1 << ch->rqcfg.brst_size;
 			u32 bytes = r->x->bytes;
@@ -743,8 +745,11 @@ int s3c2410_dma_request(enum dma_ch id,
 
 	dmac = ch->dmac;
 
+	clk_enable(dmac->dmaclk);
+
 	ch->pl330_chan_id = pl330_request_channel(dmac->pi);
 	if (!ch->pl330_chan_id) {
+		clk_disable(dmac->dmaclk);
 		chan_release(ch);
 		ret = -EBUSY;
 		goto req_exit;
@@ -856,7 +861,7 @@ int s3c2410_dma_free(enum dma_ch id, struct s3c2410_dma_client *client)
 	pl330_release_channel(ch->pl330_chan_id);
 
 	ch->pl330_chan_id = NULL;
-
+	clk_disable(ch->dmac->dmaclk);
 	chan_release(ch);
 
 free_exit:
@@ -982,6 +987,24 @@ int s3c2410_dma_devconfig(enum dma_ch id, enum s3c2410_dmasrc source,
 		ch->rqcfg.src_inc = 1;
 		ch->rqcfg.dst_inc = 0;
 		break;
+	case S3C_DMA_MEM2MEM:
+		ch->req[0].rqtype = MEMTOMEM;
+		ch->req[1].rqtype = MEMTOMEM;
+		ch->rqcfg.src_inc = 1;
+		ch->rqcfg.dst_inc = 1;
+		break;
+	case S3C_DMA_MEM2MEM_SET:
+		ch->req[0].rqtype = MEMTOMEM;
+		ch->req[1].rqtype = MEMTOMEM;
+		ch->rqcfg.src_inc = 0;
+		ch->rqcfg.dst_inc = 1;
+		break;
+	case S3C_DMA_MEM2MEM_NOBARRIER:
+		ch->req[0].rqtype = MEMTOMEM_NOBARRIER;
+		ch->req[1].rqtype = MEMTOMEM_NOBARRIER;
+		ch->rqcfg.src_inc = 1;
+		ch->rqcfg.dst_inc = 1;
+		break;
 	default:
 		ret = -EINVAL;
 		goto devcfg_exit;
@@ -1030,6 +1053,7 @@ static int pl330_probe(struct platform_device *pdev)
 	struct s3c_pl330_platdata *pl330pd;
 	struct pl330_info *pl330_info;
 	struct resource *res;
+	struct clk *dmaclk;
 	int i, ret, irq;
 
 	pl330pd = pdev->dev.platform_data;
@@ -1052,6 +1076,15 @@ static int pl330_probe(struct platform_device *pdev)
 		ret = -ENODEV;
 		goto probe_err1;
 	}
+
+	dmaclk = clk_get(&pdev->dev, "dma");
+	if (dmaclk == NULL) {
+		dev_err(&pdev->dev, "failed to find dma clock source\n");
+		ret = -ENODEV;
+		goto probe_err1;
+	}
+
+	clk_enable(dmaclk);
 
 	request_mem_region(res->start, resource_size(res), pdev->name);
 
@@ -1082,6 +1115,9 @@ static int pl330_probe(struct platform_device *pdev)
 		ret = -ENOMEM;
 		goto probe_err6;
 	}
+
+	/* Clock */
+	s3c_pl330_dmac->dmaclk = dmaclk;
 
 	/* Hook the info */
 	s3c_pl330_dmac->pi = pl330_info;
@@ -1118,6 +1154,7 @@ static int pl330_probe(struct platform_device *pdev)
 		pl330_info->pcfg.data_bus_width / 8, pl330_info->pcfg.num_chan,
 		pl330_info->pcfg.num_peri, pl330_info->pcfg.num_events);
 
+	clk_disable(dmaclk);
 	return 0;
 
 probe_err7:
@@ -1131,6 +1168,8 @@ probe_err3:
 	iounmap(pl330_info->base);
 probe_err2:
 	release_mem_region(res->start, resource_size(res));
+	clk_disable(dmaclk);
+	clk_put(dmaclk);
 probe_err1:
 	kfree(pl330_info);
 
@@ -1140,7 +1179,7 @@ probe_err1:
 static int pl330_remove(struct platform_device *pdev)
 {
 	struct s3c_pl330_dmac *dmac, *d;
-	struct s3c_pl330_chan *ch;
+	struct s3c_pl330_chan *ch, *cht;
 	unsigned long flags;
 	int del, found;
 
@@ -1164,7 +1203,7 @@ static int pl330_remove(struct platform_device *pdev)
 	dmac = d;
 
 	/* Remove all Channels that are managed only by this DMAC */
-	list_for_each_entry(ch, &chan_list, node) {
+	list_for_each_entry_safe(ch, cht, &chan_list, node) {
 
 		/* Only channels that are handled by this DMAC */
 		if (iface_of_dmac(dmac, ch->id))
@@ -1190,6 +1229,7 @@ static int pl330_remove(struct platform_device *pdev)
 
 	/* Remove the DMAC */
 	list_del(&dmac->node);
+	clk_put(dmac->dmaclk);
 	kfree(dmac);
 
 	spin_unlock_irqrestore(&res_lock, flags);

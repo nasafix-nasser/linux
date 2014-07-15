@@ -1,11 +1,11 @@
 /* sound/soc/s3c24xx/s3c-ac97.c
  *
  * ALSA SoC Audio Layer - S3C AC97 Controller driver
- * 	Evolved from s3c2443-ac97.c
+ * Evolved from s3c2443-ac97.c
  *
  * Copyright (c) 2010 Samsung Electronics Co. Ltd
- * 	Author: Jaswinder Singh <jassi.brar@samsung.com>
- * 	Credits: Graeme Gregory, Sean Choi
+ * Author: Jaswinder Singh <jassi.brar@samsung.com>
+ * Credits: Graeme Gregory, Sean Choi
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -17,6 +17,7 @@
 #include <linux/io.h>
 #include <linux/delay.h>
 #include <linux/clk.h>
+#include <linux/regulator/consumer.h>
 
 #include <sound/soc.h>
 
@@ -36,6 +37,7 @@ struct s3c_ac97_info {
 	void __iomem	   *regs;
 	struct mutex       lock;
 	struct completion  done;
+	struct regulator   *regulator;
 };
 static struct s3c_ac97_info s3c_ac97;
 
@@ -96,6 +98,7 @@ static void s3c_ac97_activate(struct snd_ac97 *ac97)
 static unsigned short s3c_ac97_read(struct snd_ac97 *ac97,
 	unsigned short reg)
 {
+	
 	u32 ac_glbctrl, ac_codec_cmd;
 	u32 stat, addr, data;
 
@@ -121,10 +124,7 @@ static unsigned short s3c_ac97_read(struct snd_ac97 *ac97,
 	stat = readl(s3c_ac97.regs + S3C_AC97_STAT);
 	addr = (stat >> 16) & 0x7f;
 	data = (stat & 0xffff);
-
-	if (addr != reg)
-		printk(KERN_ERR "s3c-ac97: req addr = %02x, rep addr = %02x\n", reg, addr);
-
+//	printk(".....s3c-read:reg=%x,data=%x\n",reg,data);
 	mutex_unlock(&s3c_ac97.lock);
 
 	return (unsigned short)data;
@@ -133,6 +133,24 @@ static unsigned short s3c_ac97_read(struct snd_ac97 *ac97,
 static void s3c_ac97_write(struct snd_ac97 *ac97, unsigned short reg,
 	unsigned short val)
 {
+//	printk(".....s3c-write:reg=%x-------val=%x\n",reg,val);
+	if (reg == 0x14 && val != 612)
+	{
+		val = 0xd801;
+//		s3c_ac97_write(ac97, 0x4, 0x0);
+//		s3c_ac97_write(ac97, 0x2, 0x6808);
+//		s3c_ac97_write(ac97, 0x12, 0x7373);
+//		s3c_ac97_write(ac97, 0x1c, 0xa0);
+//		s3c_ac97_write(ac97, 0x2, 0x1010);
+//		s3c_ac97_write(ac97, 0xa, 0x808);
+//		s3c_ac97_write(ac97, 0x22, 0xcc40);
+		int i;
+/*		for( i=0; i<0x23; i++)
+		{
+			s3c_ac97_read(ac97,i);
+		}
+*/	
+	}
 	u32 ac_glbctrl, ac_codec_cmd;
 
 	mutex_lock(&s3c_ac97.lock);
@@ -225,11 +243,30 @@ static int s3c_ac97_hw_params(struct snd_pcm_substream *substream,
 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	struct snd_soc_dai *cpu_dai = rtd->dai->cpu_dai;
 	struct s3c_dma_params *dma_data;
+	u32 dma_tsfr_size = 0;
 
-	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK)
+	switch (params_channels(params)) {
+	case 1:
+		dma_tsfr_size = 2;
+		break;
+	case 2:
+		dma_tsfr_size = 4;
+		break;
+	case 4:
+		break;
+	case 6:
+		break;
+	default:
+		break;
+	}
+
+	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK) {
+		s3c_ac97_pcm_out.dma_size = dma_tsfr_size;
 		dma_data = &s3c_ac97_pcm_out;
-	else
+	} else {
+		s3c_ac97_pcm_in.dma_size = dma_tsfr_size;
 		dma_data = &s3c_ac97_pcm_in;
+	}
 
 	snd_soc_dai_set_dma_data(cpu_dai, substream, dma_data);
 
@@ -336,13 +373,13 @@ struct snd_soc_dai s3c_ac97_dai[] = {
 		.ac97_control = 1,
 		.playback = {
 			.stream_name = "AC97 Playback",
-			.channels_min = 2,
+			.channels_min = 1,
 			.channels_max = 2,
 			.rates = SNDRV_PCM_RATE_8000_48000,
 			.formats = SNDRV_PCM_FMTBIT_S16_LE,},
 		.capture = {
 			.stream_name = "AC97 Capture",
-			.channels_min = 2,
+			.channels_min = 1,
 			.channels_max = 2,
 			.rates = SNDRV_PCM_RATE_8000_48000,
 			.formats = SNDRV_PCM_FMTBIT_S16_LE,},
@@ -374,6 +411,17 @@ static __devinit int s3c_ac97_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "cfg_gpio callback not provided!\n");
 		return -EINVAL;
 	}
+
+	/* Get ac97 power domain regulator */
+//	s3c_ac97.regulator = regulator_get(&pdev->dev, "pd");
+//	if (IS_ERR(s3c_ac97.regulator)) {
+//		dev_err(&pdev->dev, "%s: failed to get resource %s\n",
+//				__func__, "s3c-ac97");
+//		return PTR_ERR(s3c_ac97.regulator);
+//	}
+
+	/* Enable Power domain */
+//	regulator_enable(s3c_ac97.regulator);
 
 	/* Check for availability of necessary resource */
 	dmatx_res = platform_get_resource(pdev, IORESOURCE_DMA, 0);

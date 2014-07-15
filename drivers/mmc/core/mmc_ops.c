@@ -9,10 +9,9 @@
  * your option) any later version.
  */
 
-#include <linux/slab.h>
 #include <linux/types.h>
 #include <linux/scatterlist.h>
-
+#include <linux/slab.h>
 #include <linux/mmc/host.h>
 #include <linux/mmc/card.h>
 #include <linux/mmc/mmc.h>

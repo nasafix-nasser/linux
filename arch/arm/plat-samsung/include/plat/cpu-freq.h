@@ -38,6 +38,12 @@ struct s3c_freq {
 	unsigned long	hclk_tns;	/* in 10ths of ns */
 	unsigned long	hclk;
 	unsigned long	pclk;
+#ifdef CONFIG_ARCH_S5PV210
+	unsigned long	hclk_msys;
+	unsigned long	pclk_msys;
+	unsigned long	hclk_dsys;
+	unsigned long	pclk_dsys;
+#endif
 };
 
 /**
@@ -61,8 +67,7 @@ struct s3c_freq {
  */
 struct s3c_cpufreq_freqs {
 	struct cpufreq_freqs	freqs;
-	struct s3c_freq		old;
-	struct s3c_freq		new;
+	const struct s3c_freq		*old;
 
 	unsigned int		pll_changing:1;
 };

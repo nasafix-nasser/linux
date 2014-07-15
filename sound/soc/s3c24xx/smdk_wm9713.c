@@ -19,8 +19,6 @@
 #include "s3c-dma.h"
 #include "s3c-ac97.h"
 
-static struct snd_soc_card smdk;
-
 /*
  * Default CFG switch settings to use this driver:
  *
@@ -40,18 +38,26 @@ static struct snd_soc_card smdk;
 	$ amixer sset 'Left Capture Source' 'Line'
 */
 
-static struct snd_soc_dai_link smdk_dai = {
-	.name = "AC97",
-	.stream_name = "AC97 PCM",
+static struct snd_soc_dai_link smdk_dai[] = {
+{
+	.name = "AC97 PCM RX",
+	.stream_name = "AC97 PCM Playback",
 	.cpu_dai = &s3c_ac97_dai[S3C_AC97_DAI_PCM],
 	.codec_dai = &wm9713_dai[WM9713_DAI_AC97_HIFI],
+},
+{
+	.name = "AC97 PCM TX",
+	.stream_name = "AC97 PCM Capture",
+	.cpu_dai = &s3c_ac97_dai[S3C_AC97_DAI_PCM],
+	.codec_dai = &wm9713_dai[WM9713_DAI_AC97_HIFI],
+}
 };
 
 static struct snd_soc_card smdk = {
 	.name = "SMDK",
 	.platform = &s3c24xx_soc_platform,
 	.dai_link = &smdk_dai,
-	.num_links = 1,
+	.num_links = ARRAY_SIZE(smdk_dai),
 };
 
 static struct snd_soc_device smdk_snd_ac97_devdata = {
@@ -69,13 +75,16 @@ static int __init smdk_init(void)
 	if (!smdk_snd_ac97_device)
 		return -ENOMEM;
 
-	platform_set_drvdata(smdk_snd_ac97_device,
-			     &smdk_snd_ac97_devdata);
+	platform_set_drvdata(smdk_snd_ac97_device, &smdk_snd_ac97_devdata);
 	smdk_snd_ac97_devdata.dev = &smdk_snd_ac97_device->dev;
 
 	ret = platform_device_add(smdk_snd_ac97_device);
 	if (ret)
 		platform_device_put(smdk_snd_ac97_device);
+
+	ret = snd_soc_register_platform(&s3c24xx_soc_platform);
+	if (ret)
+		snd_soc_unregister_platform(&s3c24xx_soc_platform);
 
 	return ret;
 }

@@ -59,6 +59,9 @@
 #define S3C2410_ADCDAT1_XY_PST		(0x3<<12)
 #define S3C2410_ADCDAT1_YPDATA_MASK	(0x03FF)
 
+#define S3C_ADCREG(x) 			(x)
+#define S3C_ADCMUX			S3C_ADCREG(0x1C)
+#define S3C_ADCCON_SELMUX_1(x)		(((x)&0xF)<<0)
 #endif /* __ASM_ARCH_REGS_ADC_H */
 
 

@@ -9,7 +9,6 @@
 #include <linux/string.h>
 #include <linux/bug.h>
 
-#include <linux/mtd/compatmac.h>
 
 #include <asm/unaligned.h>
 #include <asm/system.h>

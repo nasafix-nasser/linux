@@ -12,7 +12,7 @@
 /*
  * OHCI Root Hub ... the nonsharable stuff
  */
-
+#include <linux/gpio.h>
 #define dbg_port(hc,label,num,value) \
 	ohci_dbg (hc, \
 		"%s roothub.portstatus [%d] " \
@@ -48,8 +48,10 @@ __releases(ohci->lock)
 __acquires(ohci->lock)
 {
 	int			status = 0;
-
+	s3c_gpio_setpull(S5PV210_ETC2(7), S3C_GPIO_PULL_UP);	
+	udelay(10);
 	ohci->hc_control = ohci_readl (ohci, &ohci->regs->control);
+
 	switch (ohci->hc_control & OHCI_CTRL_HCFS) {
 	case OHCI_USB_RESUME:
 		ohci_dbg (ohci, "resume/suspend?\n");
@@ -137,6 +139,7 @@ __acquires(ohci->lock)
 
 	ohci->autostop = 0;
 	ohci->hc_control = ohci_readl (ohci, &ohci->regs->control);
+
 
 	if (ohci->hc_control & (OHCI_CTRL_IR | OHCI_SCHED_ENABLES)) {
 		/* this can happen after resuming a swsusp snapshot */

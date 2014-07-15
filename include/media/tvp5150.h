@@ -30,5 +30,14 @@
 #define TVP5150_NORMAL       0
 #define TVP5150_BLACK_SCREEN 1
 
+struct tvp5150_platform_data {
+	unsigned int default_width;
+	unsigned int default_height;
+	unsigned int pixelformat;
+	int freq;	/* MCLK in KHz */
+
+	/* This SoC supports Parallel & CSI-2 */
+	int is_mipi;
+};
 #endif
 
