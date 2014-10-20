@@ -125,6 +125,7 @@ static int __devinit ch7026_probe(struct i2c_client *client,
 			 const struct i2c_device_id *id)
 {
 	dev_info(&client->adapter->dev, "ch7026 probe\n");
+	return -ENODEV;
 
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) 
 	{
