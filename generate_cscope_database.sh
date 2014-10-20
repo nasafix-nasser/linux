@@ -9,12 +9,6 @@ cd /
 #	-path "$LNX/scripts*" -prune -o                                       \
 #	-path "$LNX/drivers*" -prune -o                                       \
 #	-name "*.[chxsS]" -print >$LNX/cscope.files
-#find $LNX						\
-#	-path "$LNX/arch/arm/*" ! -path "$LNX/arch/arm/mach-*" ! -path "$LNX/arch/arm/plat-*" -name "*.[chxsS]" -o          \
-#	-path "$LNX/arch/arm/mach-s5pv210*"  -name "*.[chxsS]" -o		\
-#	-path "$LNX/arch/arm/plat-samsung/*" -name "*.[chxsS]" -o	\
-#	-path "$LNX/arch/arm/plat-s5p/*" -name "*.[chxsS]" \
-#	>$LNX/cscope.files
 find  $LNX                                                                \
 	-path "$LNX/arch/arm/mach-*" ! -path "$LNX/arch/arm/mach-s5pv210*" -prune -o               \
 	-path "$LNX/arch/arm/plat-*" ! -path "$LNX/arch/arm/plat-samsung*" ! -path "$LNX/arch/arm/plat-s5p*" -prune -o \
