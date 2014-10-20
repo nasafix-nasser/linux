@@ -18,7 +18,7 @@
 #include <linux/mount.h>
 
 #include <linux/mtd/mtd.h>
-#include <linux/mtd/compatmac.h>
+#include <linux/mtd/map.h>
 
 #include <asm/uaccess.h>
 

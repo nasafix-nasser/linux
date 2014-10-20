@@ -37,6 +37,7 @@ struct mtd_oob_buf64 {
 #define MTD_NANDFLASH		4
 #define MTD_DATAFLASH		6
 #define MTD_UBIVOLUME		7
+#define MTD_MLCNANDFLASH        8
 
 #define MTD_WRITEABLE		0x400	/* Device is writeable */
 #define MTD_BIT_WRITEABLE	0x800	/* Single bits can be flipped */
@@ -134,7 +135,11 @@ struct nand_oobfree {
  */
 struct nand_ecclayout {
 	__u32 eccbytes;
+	#ifndef CONFIG_NANDFLASH_2GOM
 	__u32 eccpos[64];
+	#else
+	__u32 eccpos[128];
+	#endif
 	__u32 oobavail;
 	struct nand_oobfree oobfree[MTD_MAX_OOBFREE_ENTRIES];
 };

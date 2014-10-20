@@ -99,6 +99,21 @@ config TOUCHSCREEN_BITSY
 	  To compile this driver as a module, choose M here: the
 	  module will be called h3600_ts_input.
 
+config TOUCHSCREEN_S3C
+	tristate "S3C touchscreen driver"
+	depends on ARCH_S3C2410 || ARCH_S3C64XX || ARCH_S5PV2XX || ARCH_S5P64XX || CPU_S5PV210 || CPU_S5PC110
+	default y
+	help
+	  Say Y here to enable the driver for the touchscreen on the S3C SMDK board.
+	  If unsure, say N. To compile this driver as a module, choose M here: the module will be called s3c_ts.
+
+config TOUCHSCREEN_REALARM
+	tristate "realarm multi-touch driver"
+	depends on CPU_S5PV210
+	default y
+	help
+	  Say Y here to enable the driver realarm multi-touchscreen.
+
 config TOUCHSCREEN_DA9034
 	tristate "Touchscreen support for Dialog Semiconductor DA9034"
 	depends on PMIC_DA903X
@@ -248,6 +263,18 @@ config TOUCHSCREEN_MK712
 	  To compile this driver as a module, choose M here: the
 	  module will be called mk712.
 
+config TOUCHSCREEN_MXT224
+	tristate "Atmel MaxTouch 224"
+	depends on I2C
+	help
+	  Say Y here to enable support for the Atmel MaxTouch 224 touch
+	  controller.
+
+	  If unsure, say N.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called mxt224.
+
 config TOUCHSCREEN_HP600
 	tristate "HP Jornada 6xx touchscreen"
 	depends on SH_HP6XX && SH_ADC
@@ -302,6 +329,12 @@ config TOUCHSCREEN_MIGOR
 
 	  To compile this driver as a module, choose M here: the
 	  module will be called migor_ts.
+
+config TOUCHSCREEN_SYNAPTICS_I2C_RMI
+	tristate "Synaptics i2c touchscreen"
+	depends on I2C
+	help
+	  This enables support for Synaptics RMI over I2C based touchscreens.
 
 config TOUCHSCREEN_TOUCHRIGHT
 	tristate "Touchright serial touchscreen"

@@ -16,6 +16,18 @@
 
 struct s3c_adc_client;
 
+enum s3c_cpu_type {
+	TYPE_S3C24XX,
+	TYPE_S3C64XX
+};
+
+struct s3c_adc_mach_info {
+	/* if you need to use some platform data, add in here*/
+	int delay;
+	int presc;
+	int resolution;
+};
+
 extern int s3c_adc_start(struct s3c_adc_client *client,
 			 unsigned int channel, unsigned int nr_samples);
 

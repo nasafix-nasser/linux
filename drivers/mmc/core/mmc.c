@@ -11,12 +11,11 @@
  */
 
 #include <linux/err.h>
-#include <linux/slab.h>
 
 #include <linux/mmc/host.h>
 #include <linux/mmc/card.h>
 #include <linux/mmc/mmc.h>
-
+#include <linux/slab.h>
 #include "core.h"
 #include "bus.h"
 #include "mmc_ops.h"
@@ -122,7 +121,7 @@ static int mmc_decode_csd(struct mmc_card *card)
 	 * v1.2 has extra information in bits 15, 11 and 10.
 	 */
 	csd_struct = UNSTUFF_BITS(resp, 126, 2);
-	if (csd_struct != 1 && csd_struct != 2) {
+	if (csd_struct != 1 && csd_struct != 2 && csd_struct != 3) {
 		printk(KERN_ERR "%s: unrecognised CSD structure version %d\n",
 			mmc_hostname(card->host), csd_struct);
 		return -EINVAL;
@@ -238,6 +237,7 @@ static int mmc_read_ext_csd(struct mmc_card *card)
 		printk(KERN_WARNING "%s: card is mmc v4 but doesn't "
 			"support any high-speed modes.\n",
 			mmc_hostname(card->host));
+		goto out;
 	}
 
 	if (card->ext_csd.rev >= 3) {
@@ -602,6 +602,25 @@ static int mmc_awake(struct mmc_host *host)
 	return err;
 }
 
+#ifdef CONFIG_MMC_UNSAFE_RESUME
+
+static const struct mmc_bus_ops mmc_ops = {
+	.awake = mmc_awake,
+	.sleep = mmc_sleep,
+	.remove = mmc_remove,
+	.detect = mmc_detect,
+	.suspend = mmc_suspend,
+	.resume = mmc_resume,
+	.power_restore = mmc_power_restore,
+};
+
+static void mmc_attach_bus_ops(struct mmc_host *host)
+{
+	mmc_attach_bus(host, &mmc_ops);
+}
+
+#else
+
 static const struct mmc_bus_ops mmc_ops = {
 	.awake = mmc_awake,
 	.sleep = mmc_sleep,
@@ -626,12 +645,14 @@ static void mmc_attach_bus_ops(struct mmc_host *host)
 {
 	const struct mmc_bus_ops *bus_ops;
 
-	if (host->caps & MMC_CAP_NONREMOVABLE || !mmc_assume_removable)
+	if (host->caps & MMC_CAP_NONREMOVABLE)
 		bus_ops = &mmc_ops_unsafe;
 	else
 		bus_ops = &mmc_ops;
 	mmc_attach_bus(host, bus_ops);
 }
+
+#endif
 
 /*
  * Starting point for MMC card init.

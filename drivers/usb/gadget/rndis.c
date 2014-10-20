@@ -820,8 +820,6 @@ int rndis_msg_parser (u8 configNr, u8 *buf)
 	/* For USB: responses may take up to 10 seconds */
 	switch (MsgType) {
 	case REMOTE_NDIS_INITIALIZE_MSG:
-		pr_debug("%s: REMOTE_NDIS_INITIALIZE_MSG\n",
-			__func__ );
 		params->state = RNDIS_INITIALIZED;
 		return  rndis_init_response (configNr,
 					(rndis_init_msg_type *) buf);

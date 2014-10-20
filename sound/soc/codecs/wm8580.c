@@ -107,8 +107,15 @@
 
 /* CLKSEL (register 8h) */
 #define WM8580_CLKSEL_DAC_CLKSEL_MASK 0x03
+#define WM8580_CLKSEL_DAC_CLKSEL_MCLK 0x00
 #define WM8580_CLKSEL_DAC_CLKSEL_PLLA 0x01
 #define WM8580_CLKSEL_DAC_CLKSEL_PLLB 0x02
+
+#define WM8580_CLKSEL_ADC_CLKSEL_MASK     0x0c
+#define WM8580_CLKSEL_ADC_CLKSEL_ADCMCLK  0x00
+#define WM8580_CLKSEL_ADC_CLKSEL_PLLA     0x04
+#define WM8580_CLKSEL_ADC_CLKSEL_PLLB     0x08
+#define WM8580_CLKSEL_ADC_CLKSEL_MCLK     0x0c
 
 /* AIF control 1 (registers 9h-bh) */
 #define WM8580_AIF_RATE_MASK       0x7
@@ -122,15 +129,16 @@
 
 #define WM8580_AIF_BCLKSEL_MASK   0x18
 #define WM8580_AIF_BCLKSEL_64     0x00
-#define WM8580_AIF_BCLKSEL_128    0x08
-#define WM8580_AIF_BCLKSEL_256    0x10
+#define WM8580_AIF_BCLKSEL_32    0x08
+#define WM8580_AIF_BCLKSEL_16    0x10
 #define WM8580_AIF_BCLKSEL_SYSCLK 0x18
 
 #define WM8580_AIF_MS             0x20
 
 #define WM8580_AIF_CLKSRC_MASK    0xc0
+#define WM8580_AIF_CLKSRC_ADCMCLK 0x00
 #define WM8580_AIF_CLKSRC_PLLA    0x40
-#define WM8580_AIF_CLKSRC_PLLB    0x40
+#define WM8580_AIF_CLKSRC_PLLB    0x80
 #define WM8580_AIF_CLKSRC_MCLK    0xc0
 
 /* AIF control 2 (registers ch-eh) */
@@ -163,6 +171,8 @@
 
 #define WM8580_DAC_CONTROL5_MUTEALL 0x10
 
+#undef CONFIG_REGULATOR
+
 /*
  * wm8580 register cache
  * We can't read the WM8580 register space when we
@@ -171,7 +181,7 @@
 static const u16 wm8580_reg[] = {
 	0x0121, 0x017e, 0x007d, 0x0014, /*R3*/
 	0x0121, 0x017e, 0x007d, 0x0194, /*R7*/
-	0x001c, 0x0002, 0x0002, 0x00c2, /*R11*/
+	0x0010, 0x0002, 0x0002, 0x00c2, /*R11*/
 	0x0182, 0x0082, 0x000a, 0x0024, /*R15*/
 	0x0009, 0x0000, 0x00ff, 0x0000, /*R19*/
 	0x00ff, 0x00ff, 0x00ff, 0x00ff, /*R23*/
@@ -190,17 +200,21 @@ struct pll_state {
 	unsigned int out;
 };
 
+#ifdef CONFIG_REGULATOR
 #define WM8580_NUM_SUPPLIES 3
 static const char *wm8580_supply_names[WM8580_NUM_SUPPLIES] = {
 	"AVDD",
 	"DVDD",
 	"PVDD",
 };
+#endif
 
 /* codec private data */
 struct wm8580_priv {
 	struct snd_soc_codec codec;
+#ifdef CONFIG_REGULATOR
 	struct regulator_bulk_data supplies[WM8580_NUM_SUPPLIES];
+#endif
 	u16 reg_cache[WM8580_MAX_REGISTER + 1];
 	struct pll_state a;
 	struct pll_state b;
@@ -269,9 +283,9 @@ SOC_DOUBLE("DAC2 Invert Switch", WM8580_DAC_CONTROL4,  2, 3, 1, 0),
 SOC_DOUBLE("DAC3 Invert Switch", WM8580_DAC_CONTROL4,  4, 5, 1, 0),
 
 SOC_SINGLE("DAC ZC Switch", WM8580_DAC_CONTROL5, 5, 1, 0),
-SOC_SINGLE("DAC1 Switch", WM8580_DAC_CONTROL5, 0, 1, 1),
-SOC_SINGLE("DAC2 Switch", WM8580_DAC_CONTROL5, 1, 1, 1),
-SOC_SINGLE("DAC3 Switch", WM8580_DAC_CONTROL5, 2, 1, 1),
+SOC_SINGLE("DAC1 Switch", WM8580_DAC_CONTROL5, 0, 1, 0),
+SOC_SINGLE("DAC2 Switch", WM8580_DAC_CONTROL5, 1, 1, 0),
+SOC_SINGLE("DAC3 Switch", WM8580_DAC_CONTROL5, 2, 1, 0),
 
 SOC_DOUBLE("ADC Mute Switch", WM8580_ADC_CONTROL1, 0, 1, 1, 0),
 SOC_SINGLE("ADC High-Pass Filter Switch", WM8580_ADC_CONTROL1, 4, 1, 0),
@@ -630,6 +644,7 @@ static int wm8580_set_dai_clkdiv(struct snd_soc_dai *codec_dai,
 
 		switch (div) {
 		case WM8580_CLKSRC_MCLK:
+			reg |= WM8580_CLKSEL_DAC_CLKSEL_MCLK;
 			break;
 
 		case WM8580_CLKSRC_PLLA:
@@ -638,6 +653,33 @@ static int wm8580_set_dai_clkdiv(struct snd_soc_dai *codec_dai,
 
 		case WM8580_CLKSRC_PLLB:
 			reg |= WM8580_CLKSEL_DAC_CLKSEL_PLLB;
+			break;
+
+		default:
+			return -EINVAL;
+		}
+		snd_soc_write(codec, WM8580_CLKSEL, reg);
+		break;
+
+	case WM8580_ADC_CLKSEL:
+		reg = snd_soc_read(codec, WM8580_CLKSEL);
+		reg &= ~WM8580_CLKSEL_ADC_CLKSEL_MASK;
+
+		switch (div) {
+		case WM8580_CLKSRC_ADCMCLK:
+			reg |= WM8580_CLKSEL_ADC_CLKSEL_ADCMCLK;
+			break;
+
+		case WM8580_CLKSRC_MCLK:
+			reg |= WM8580_CLKSEL_ADC_CLKSEL_MCLK;
+			break;
+
+		case WM8580_CLKSRC_PLLA:
+			reg |= WM8580_CLKSEL_ADC_CLKSEL_PLLA;
+			break;
+
+		case WM8580_CLKSRC_PLLB:
+			reg |= WM8580_CLKSEL_ADC_CLKSEL_PLLB;
 			break;
 
 		default:
@@ -670,6 +712,83 @@ static int wm8580_set_dai_clkdiv(struct snd_soc_dai *codec_dai,
 			return -EINVAL;
 		}
 		snd_soc_write(codec, WM8580_PLLB4, reg);
+		break;
+
+	case WM8580_PAIF_CLKSEL:
+		reg = snd_soc_read(codec, WM8580_PAIF1 + codec_dai->id);
+		reg &= ~WM8580_AIF_CLKSRC_MASK;
+		switch (div) {
+		case WM8580_CLKSRC_ADCMCLK:
+			reg |= WM8580_AIF_CLKSRC_ADCMCLK;
+			break;
+
+		case WM8580_CLKSRC_PLLA:
+			reg |= WM8580_AIF_CLKSRC_PLLA;
+			break;
+
+		case WM8580_CLKSRC_PLLB:
+			reg |= WM8580_AIF_CLKSRC_PLLB;
+			break;
+
+		case WM8580_CLKSRC_MCLK:
+			reg |= WM8580_AIF_CLKSRC_MCLK;
+			break;
+
+		default:
+			return -EINVAL;
+		}
+		snd_soc_write(codec, WM8580_PAIF1 + codec_dai->id, reg);
+		break;
+
+	case WM8580_MCLKRATIO:
+		reg = snd_soc_read(codec, WM8580_PAIF1 + codec_dai->id);
+		reg &= ~WM8580_AIF_RATE_MASK;
+		switch (div) {
+		case 128:
+			reg |= WM8580_AIF_RATE_128;
+			break;
+		case 192:
+			reg |= WM8580_AIF_RATE_192;
+			break;
+		case 256:
+			reg |= WM8580_AIF_RATE_256;
+			break;
+		case 384:
+			reg |= WM8580_AIF_RATE_384;
+			break;
+		case 512:
+			reg |= WM8580_AIF_RATE_512;
+			break;
+		case 768:
+			reg |= WM8580_AIF_RATE_768;
+			break;
+		case 1152:
+			reg |= WM8580_AIF_RATE_1152;
+			break;
+		default:
+			return -EINVAL;
+		}
+		snd_soc_write(codec, WM8580_PAIF1 + codec_dai->id, reg);
+		break;
+
+	case WM8580_BCLKRATIO:
+		reg = snd_soc_read(codec, WM8580_PAIF1 + codec_dai->id);
+		reg &= ~WM8580_AIF_BCLKSEL_MASK;
+		switch (div) {
+		case 64:
+			reg |= WM8580_AIF_BCLKSEL_64;
+			break;
+		case 32:
+			reg |= WM8580_AIF_BCLKSEL_32;
+			break;
+		case 16:
+			reg |= WM8580_AIF_BCLKSEL_16;
+			break;
+		default:
+			reg |= WM8580_AIF_BCLKSEL_SYSCLK;
+			break;
+		}
+		snd_soc_write(codec, WM8580_PAIF1 + codec_dai->id, reg);
 		break;
 
 	default:
@@ -764,7 +883,7 @@ struct snd_soc_dai wm8580_dai[] = {
 		.id = 1,
 		.capture = {
 			.stream_name = "Capture",
-			.channels_min = 2,
+			.channels_min = 1,
 			.channels_max = 2,
 			.rates = SNDRV_PCM_RATE_8000_192000,
 			.formats = WM8580_FORMATS,
@@ -819,8 +938,8 @@ static int wm8580_remove(struct platform_device *pdev)
 }
 
 struct snd_soc_codec_device soc_codec_dev_wm8580 = {
-	.probe = 	wm8580_probe,
-	.remove = 	wm8580_remove,
+	.probe = wm8580_probe,
+	.remove = wm8580_remove,
 };
 EXPORT_SYMBOL_GPL(soc_codec_dev_wm8580);
 
@@ -858,6 +977,7 @@ static int wm8580_register(struct wm8580_priv *wm8580,
 		goto err;
 	}
 
+#ifdef CONFIG_REGULATOR
 	for (i = 0; i < ARRAY_SIZE(wm8580->supplies); i++)
 		wm8580->supplies[i].supply = wm8580_supply_names[i];
 
@@ -874,6 +994,7 @@ static int wm8580_register(struct wm8580_priv *wm8580,
 		dev_err(codec->dev, "Failed to enable supplies: %d\n", ret);
 		goto err_regulator_get;
 	}
+#endif
 
 	/* Get the codec into a known state */
 	ret = snd_soc_write(codec, WM8580_RESET, 0);
@@ -906,9 +1027,11 @@ static int wm8580_register(struct wm8580_priv *wm8580,
 err_codec:
 	snd_soc_unregister_codec(codec);
 err_regulator_enable:
+#ifdef CONFIG_REGULATOR
 	regulator_bulk_disable(ARRAY_SIZE(wm8580->supplies), wm8580->supplies);
 err_regulator_get:
 	regulator_bulk_free(ARRAY_SIZE(wm8580->supplies), wm8580->supplies);
+#endif
 err:
 	kfree(wm8580);
 	return ret;
@@ -919,8 +1042,10 @@ static void wm8580_unregister(struct wm8580_priv *wm8580)
 	wm8580_set_bias_level(&wm8580->codec, SND_SOC_BIAS_OFF);
 	snd_soc_unregister_dais(wm8580_dai, ARRAY_SIZE(wm8580_dai));
 	snd_soc_unregister_codec(&wm8580->codec);
+#ifdef CONFIG_REGULATOR
 	regulator_bulk_disable(ARRAY_SIZE(wm8580->supplies), wm8580->supplies);
 	regulator_bulk_free(ARRAY_SIZE(wm8580->supplies), wm8580->supplies);
+#endif
 	kfree(wm8580);
 	wm8580_codec = NULL;
 }
@@ -976,9 +1101,8 @@ static int __init wm8580_modinit(void)
 
 #if defined(CONFIG_I2C) || defined(CONFIG_I2C_MODULE)
 	ret = i2c_add_driver(&wm8580_i2c_driver);
-	if (ret != 0) {
+	if (ret != 0)
 		pr_err("Failed to register WM8580 I2C driver: %d\n", ret);
-	}
 #endif
 
 	return 0;

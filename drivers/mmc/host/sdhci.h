@@ -8,8 +8,6 @@
  * the Free Software Foundation; either version 2 of the License, or (at
  * your option) any later version.
  */
-#ifndef __SDHCI_H
-#define __SDHCI_H
 
 #include <linux/scatterlist.h>
 #include <linux/compiler.h>
@@ -127,7 +125,7 @@
 #define  SDHCI_INT_DATA_MASK	(SDHCI_INT_DATA_END | SDHCI_INT_DMA_END | \
 		SDHCI_INT_DATA_AVAIL | SDHCI_INT_SPACE_AVAIL | \
 		SDHCI_INT_DATA_TIMEOUT | SDHCI_INT_DATA_CRC | \
-		SDHCI_INT_DATA_END_BIT | SDHCI_INT_ADMA_ERROR)
+		SDHCI_INT_DATA_END_BIT | SDHCI_ADMA_ERROR)
 #define SDHCI_INT_ALL_MASK	((unsigned int)-1)
 
 #define SDHCI_ACMD12_ERR	0x3C
@@ -236,11 +234,14 @@ struct sdhci_host {
 #define SDHCI_QUIRK_DELAY_AFTER_POWER			(1<<23)
 /* Controller uses SDCLK instead of TMCLK for data timeouts */
 #define SDHCI_QUIRK_DATA_TIMEOUT_USES_SDCLK		(1<<24)
-/* Controller reports wrong base clock capability */
-#define SDHCI_QUIRK_CAP_CLOCK_BASE_BROKEN		(1<<25)
 /* Controller cannot support End Attribute in NOP ADMA descriptor */
-#define SDHCI_QUIRK_NO_ENDATTR_IN_NOPDESC		(1<<26)
-
+#define SDHCI_QUIRK_NO_ENDATTR_IN_NOPDESC		(1<<25)
+/* Controller does not use HISPD bit field in HI-SPEED SD cards */
+#define SDHCI_QUIRK_NO_HISPD_BIT			(1<<26)
+/* Controller has unreliable card present bit */
+#define SDHCI_QUIRK_BROKEN_CARD_PRESENT_BIT		(1<<27)
+/* Controller has hardware bugs */
+#define SDHCI_QUIRK_INIT_ISSUE_CMD			(1<<29)
 	int			irq;		/* Device IRQ */
 	void __iomem *		ioaddr;		/* Mapped address */
 
@@ -269,6 +270,7 @@ struct sdhci_host {
 	unsigned int		timeout_clk;	/* Timeout freq (KHz) */
 
 	unsigned int		clock;		/* Current clock (MHz) */
+	unsigned int		clock_to_restore;	/* Saved clock for dynamic clock gating (MHz) */
 	u8			pwr;		/* Current voltage */
 
 	struct mmc_request	*mrq;		/* Current request */
@@ -291,6 +293,7 @@ struct sdhci_host {
 	struct tasklet_struct	finish_tasklet;
 
 	struct timer_list	timer;		/* Timer for timeouts */
+	struct timer_list	clock_timer;	/* Timer for clock gating */
 
 	unsigned long		private[0] ____cacheline_aligned;
 };
@@ -298,12 +301,12 @@ struct sdhci_host {
 
 struct sdhci_ops {
 #ifdef CONFIG_MMC_SDHCI_IO_ACCESSORS
-	u32		(*read_l)(struct sdhci_host *host, int reg);
-	u16		(*read_w)(struct sdhci_host *host, int reg);
-	u8		(*read_b)(struct sdhci_host *host, int reg);
-	void		(*write_l)(struct sdhci_host *host, u32 val, int reg);
-	void		(*write_w)(struct sdhci_host *host, u16 val, int reg);
-	void		(*write_b)(struct sdhci_host *host, u8 val, int reg);
+	u32		(*readl)(struct sdhci_host *host, int reg);
+	u16		(*readw)(struct sdhci_host *host, int reg);
+	u8		(*readb)(struct sdhci_host *host, int reg);
+	void		(*writel)(struct sdhci_host *host, u32 val, int reg);
+	void		(*writew)(struct sdhci_host *host, u16 val, int reg);
+	void		(*writeb)(struct sdhci_host *host, u8 val, int reg);
 #endif
 
 	void	(*set_clock)(struct sdhci_host *host, unsigned int clock);
@@ -312,54 +315,58 @@ struct sdhci_ops {
 	unsigned int	(*get_max_clock)(struct sdhci_host *host);
 	unsigned int	(*get_min_clock)(struct sdhci_host *host);
 	unsigned int	(*get_timeout_clock)(struct sdhci_host *host);
+	void            (*set_ios)(struct sdhci_host *host,
+				   struct mmc_ios *ios);
+	int             (*get_ro) (struct mmc_host *mmc);
+	void		(*init_issue_cmd)(struct sdhci_host *host);
 };
 
 #ifdef CONFIG_MMC_SDHCI_IO_ACCESSORS
 
 static inline void sdhci_writel(struct sdhci_host *host, u32 val, int reg)
 {
-	if (unlikely(host->ops->write_l))
-		host->ops->write_l(host, val, reg);
+	if (unlikely(host->ops->writel))
+		host->ops->writel(host, val, reg);
 	else
 		writel(val, host->ioaddr + reg);
 }
 
 static inline void sdhci_writew(struct sdhci_host *host, u16 val, int reg)
 {
-	if (unlikely(host->ops->write_w))
-		host->ops->write_w(host, val, reg);
+	if (unlikely(host->ops->writew))
+		host->ops->writew(host, val, reg);
 	else
 		writew(val, host->ioaddr + reg);
 }
 
 static inline void sdhci_writeb(struct sdhci_host *host, u8 val, int reg)
 {
-	if (unlikely(host->ops->write_b))
-		host->ops->write_b(host, val, reg);
+	if (unlikely(host->ops->writeb))
+		host->ops->writeb(host, val, reg);
 	else
 		writeb(val, host->ioaddr + reg);
 }
 
 static inline u32 sdhci_readl(struct sdhci_host *host, int reg)
 {
-	if (unlikely(host->ops->read_l))
-		return host->ops->read_l(host, reg);
+	if (unlikely(host->ops->readl))
+		return host->ops->readl(host, reg);
 	else
 		return readl(host->ioaddr + reg);
 }
 
 static inline u16 sdhci_readw(struct sdhci_host *host, int reg)
 {
-	if (unlikely(host->ops->read_w))
-		return host->ops->read_w(host, reg);
+	if (unlikely(host->ops->readw))
+		return host->ops->readw(host, reg);
 	else
 		return readw(host->ioaddr + reg);
 }
 
 static inline u8 sdhci_readb(struct sdhci_host *host, int reg)
 {
-	if (unlikely(host->ops->read_b))
-		return host->ops->read_b(host, reg);
+	if (unlikely(host->ops->readb))
+		return host->ops->readb(host, reg);
 	else
 		return readb(host->ioaddr + reg);
 }
@@ -414,5 +421,3 @@ extern void sdhci_remove_host(struct sdhci_host *host, int dead);
 extern int sdhci_suspend_host(struct sdhci_host *host, pm_message_t state);
 extern int sdhci_resume_host(struct sdhci_host *host);
 #endif
-
-#endif /* __SDHCI_H */

@@ -38,9 +38,6 @@ static int pwm_backlight_update_status(struct backlight_device *bl)
 	if (bl->props.power != FB_BLANK_UNBLANK)
 		brightness = 0;
 
-	if (bl->props.fb_blank != FB_BLANK_UNBLANK)
-		brightness = 0;
-
 	if (pb->notify)
 		brightness = pb->notify(pb->dev, brightness);
 

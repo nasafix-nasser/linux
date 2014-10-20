@@ -1,0 +1,171 @@
+/* arch/arm/plat-s5p/include/plat/regs-nand.h
+ *
+ * Copyright (c) 2010 Samsung Electronics Co., Ltd.
+ *		http://www.samsung.com/
+ *
+ * Register definition file for Samsung NAND driver
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+*/
+
+#ifndef __ASM_ARM_REGS_S5P_NAND
+#define __ASM_ARM_REGS_S5P_NAND
+
+
+#define S5P_NFREG(x) (x)
+
+/* for s3c_nand.c */
+#define S3C_NFCONF		S5P_NFREG(0x00)
+#define S3C_NFCONT		S5P_NFREG(0x04)
+#define S3C_NFCMMD		S5P_NFREG(0x08)
+#define S3C_NFADDR		S5P_NFREG(0x0c)
+#define S3C_NFDATA8		S5P_NFREG(0x10)
+#define S3C_NFDATA		S5P_NFREG(0x10)
+#define S3C_NFMECCDATA0		S5P_NFREG(0x14)
+#define S3C_NFMECCDATA1		S5P_NFREG(0x18)
+#define S3C_NFSECCDATA		S5P_NFREG(0x1c)
+#define S3C_NFSBLK		S5P_NFREG(0x20)
+#define S3C_NFEBLK		S5P_NFREG(0x24)
+#define S3C_NFSTAT		S5P_NFREG(0x28)
+#define S3C_NFMECCERR0		S5P_NFREG(0x2c)
+#define S3C_NFMECCERR1		S5P_NFREG(0x30)
+#define S3C_NFMECC0		S5P_NFREG(0x34)
+#define S3C_NFMECC1		S5P_NFREG(0x38)
+#define S3C_NFSECC		S5P_NFREG(0x3c)
+#define S3C_NFMLCBITPT		S5P_NFREG(0x40)
+#define S3C_NF8ECCERR0		S5P_NFREG(0x44)
+#define S3C_NF8ECCERR1		S5P_NFREG(0x48)
+#define S3C_NF8ECCERR2		S5P_NFREG(0x4C)
+#define S3C_NFM8ECC0		S5P_NFREG(0x50)
+#define S3C_NFM8ECC1		S5P_NFREG(0x54)
+#define S3C_NFM8ECC2		S5P_NFREG(0x58)
+#define S3C_NFM8ECC3		S5P_NFREG(0x5C)
+#define S3C_NFMLC8BITPT0	S5P_NFREG(0x60)
+#define S3C_NFMLC8BITPT1	S5P_NFREG(0x64)
+#define ELFIN_NAND_ECC_BASE		0x20000
+
+#define NFECCCONF_OFFSET 		0x000 // R/W ECC configuration register 0x0000_0000
+#define NFECCCONT_OFFSET 		0x020 // R/W ECC control register 0x0000_0000
+#define NFECCSTAT_OFFSET 		0x030 // R ECC status register 0x0000_0000
+#define NFECCSECSTAT_OFFSET 		0x040 // R ECC sector status register 0x0000_0000
+#define NFECCPRGECC0_OFFSET 		0x090 // R ECC parity code0 register for page program 0x0000_0000
+#define NFECCPRGECC1_OFFSET 		0x094 // R ECC parity code1 register for page program 0x0000_0000
+#define NFECCPRGECC2_OFFSET 		0x098 // R ECC parity code2 register for page program 0x0000_0000
+#define NFECCPRGECC3_OFFSET 		0x09C // R ECC parity code3 register for page program 0x0000_0000
+#define NFECCPRGECC4_OFFSET 		0x0A0 // R ECC parity code4 register for page program 0x0000_0000
+#define NFECCPRGECC5_OFFSET 		0x0A4 // R ECC parity code5 register for page program 0x0000_0000
+#define NFECCPRGECC6_OFFSET 		0x0A8 // R ECC parity code6 register for page program 0x0000_0000
+#define NFECCERL0_OFFSET		0x0C0 // R ECC error byte location0 register 0x0000_0000
+#define NFECCERL1_OFFSET		0x0C4 // R ECC error byte location1 register 0x0000_0000
+#define NFECCERL2_OFFSET		0x0C8 // R ECC error byte location2 register 0x0000_0000
+#define NFECCERL3_OFFSET 		0x0CC // R ECC error byte location3 register 0x0000_0000
+#define NFECCERL4_OFFSET 		0x0D0 // R ECC error byte location4 register 0x0000_0000
+#define NFECCERL5_OFFSET 		0x0D4 // R ECC error byte location5 register 0x0000_0000
+#define NFECCERL6_OFFSET 		0x0D8 // R ECC error byte location6 register 0x0000_0000
+#define NFECCERL7_OFFSET 		0x0DC // R ECC error byte location7 register 0x0000_0000
+#define NFECCERP0_OFFSET 		0x0F0 // R ECC error bit pattern0 register 0x0000_0000
+#define NFECCERP1_OFFSET 		0x0F4 // R ECC error bit pattern1 register 0x0000_0000
+#define NFECCERP2_OFFSET 		0x0F8 // R ECC error bit pattern2 register 0x0000_0000
+#define NFECCERP3_OFFSET 		0x0FC // R ECC error bit pattern3 register 0x0000_0000
+#define NFECCCONECC0_OFFSET 		0x110 // R/W ECC parity conversion code0 register 0x0000_0000
+#define NFECCCONECC1_OFFSET 		0x114 // R/W ECC parity conversion code1 register 0x0000_0000
+#define NFECCCONECC2_OFFSET 		0x118 // R/W ECC parity conversion code2 register 0x0000_0000
+#define NFECCCONECC3_OFFSET 		0x11C // R/W ECC parity conversion code3 register 0x0000_0000
+#define NFECCCONECC4_OFFSET 		0x120 // R/W ECC parity conversion code4 register 0x0000_0000
+#define NFECCCONECC5_OFFSET 		0x124 // R/W ECC parity conversion code5 register 0x0000_0000
+#define NFECCCONECC6_OFFSET		0x128 // R/W ECC parity conversion code6 register 0x0000_0000
+
+
+#define NFECCCONF			(ELFIN_NAND_ECC_BASE+NFECCCONF_OFFSET)
+#define NFECCCONT			(ELFIN_NAND_ECC_BASE+NFECCCONT_OFFSET)
+#define NFECCSTAT			(ELFIN_NAND_ECC_BASE+NFECCSTAT_OFFSET)
+#define NFECCSECSTAT			(ELFIN_NAND_ECC_BASE+NFECCSECSTAT_OFFSET)
+#define NFECCPRGECC0			(ELFIN_NAND_ECC_BASE+NFECCPRGECC0_OFFSET)
+#define NFECCPRGECC1			(ELFIN_NAND_ECC_BASE+NFECCPRGECC1_OFFSET)
+#define NFECCPRGECC2			(ELFIN_NAND_ECC_BASE+NFECCPRGECC2_OFFSET)
+#define NFECCPRGECC3			(ELFIN_NAND_ECC_BASE+NFECCPRGECC3_OFFSET)
+#define NFECCPRGECC4			(ELFIN_NAND_ECC_BASE+NFECCPRGECC4_OFFSET)
+#define NFECCPRGECC5			(ELFIN_NAND_ECC_BASE+NFECCPRGECC5_OFFSET)
+#define NFECCPRGECC6			(ELFIN_NAND_ECC_BASE+NFECCPRGECC6_OFFSET)
+#define NFECCERL0			(ELFIN_NAND_ECC_BASE+NFECCERL0_OFFSET)
+#define NFECCERL1			(ELFIN_NAND_ECC_BASE+NFECCERL1_OFFSET)
+#define NFECCERL2			(ELFIN_NAND_ECC_BASE+NFECCERL2_OFFSET)
+#define NFECCERL3			(ELFIN_NAND_ECC_BASE+NFECCERL3_OFFSET)
+#define NFECCERL4			(ELFIN_NAND_ECC_BASE+NFECCERL4_OFFSET)
+#define NFECCERL5			(ELFIN_NAND_ECC_BASE+NFECCERL5_OFFSET)
+#define NFECCERL6			(ELFIN_NAND_ECC_BASE+NFECCERL6_OFFSET)
+#define NFECCERL7			(ELFIN_NAND_ECC_BASE+NFECCERL7_OFFSET)
+#define NFECCERP0			(ELFIN_NAND_ECC_BASE+NFECCERP0_OFFSET)
+#define NFECCERP1			(ELFIN_NAND_ECC_BASE+NFECCERP1_OFFSET)
+#define NFECCERP2			(ELFIN_NAND_ECC_BASE+NFECCERP2_OFFSET)
+#define NFECCERP3			(ELFIN_NAND_ECC_BASE+NFECCERP3_OFFSET)
+#define NFECCCONECC0			(ELFIN_NAND_ECC_BASE+NFECCCONECC0_OFFSET)
+#define NFECCCONECC1			(ELFIN_NAND_ECC_BASE+NFECCCONECC1_OFFSET)
+#define NFECCCONECC2			(ELFIN_NAND_ECC_BASE+NFECCCONECC2_OFFSET)
+#define NFECCCONECC3			(ELFIN_NAND_ECC_BASE+NFECCCONECC3_OFFSET)
+#define NFECCCONECC4			(ELFIN_NAND_ECC_BASE+NFECCCONECC4_OFFSET)
+#define NFECCCONECC5			(ELFIN_NAND_ECC_BASE+NFECCCONECC5_OFFSET)
+#define NFECCCONECC6			(ELFIN_NAND_ECC_BASE+NFECCCONECC6_OFFSET)
+
+#define NFCONF_ECC_MLC			(1<<24)
+
+#define NFCONF_ECC_1BIT			(0<<23)
+#define NFCONF_ECC_4BIT			(2<<23)
+#define NFCONF_ECC_8BIT			(1<<23)
+
+#define NFCONT_ECC_ENC			(1<<18)
+#define NFCONT_WP			(1<<16)
+#define NFCONT_MECCLOCK			(1<<7)
+#define NFCONT_SECCLOCK			(1<<6)
+#define NFCONT_INITMECC			(1<<5)
+#define NFCONT_INITSECC			(1<<4)
+#define NFCONT_INITECC			(NFCONT_INITMECC | NFCONT_INITSECC)
+#define NFCONT_CS			(1<<1)
+#define NFSTAT_ECCENCDONE		(1<<25)
+#define NFSTAT_ECCDECDONE		(1<<24)
+#define NFSTAT_RnB			(1<<0)
+#define NFESTAT0_ECCBUSY		(1<<31)
+
+
+#define S3C_NFCONF_NANDBOOT	(1<<31)
+#define S3C_NFCONF_ECCCLKCON	(1<<30)
+#define S3C_NFCONF_ECC_MLC	(1<<24)
+#define S3C_NFCONF_ECC_1BIT	(0<<23)
+#define S3C_NFCONF_ECC_4BIT	(2<<23)
+#define S3C_NFCONF_ECC_8BIT	(1<<23)
+#define S3C_NFCONF_TACLS(x)	((x)<<12)
+#define S3C_NFCONF_TWRPH0(x)	((x)<<8)
+#define S3C_NFCONF_TWRPH1(x)	((x)<<4)
+#define S3C_NFCONF_ADVFLASH	(1<<3)
+#define S3C_NFCONF_PAGESIZE	(1<<2)
+#define S3C_NFCONF_ADDRCYCLE	(1<<1)
+#define S3C_NFCONF_BUSWIDTH	(1<<0)
+
+#define S3C_NFCONT_ECC_ENC	(1<<18)
+#define S3C_NFCONT_LOCKTGHT	(1<<17)
+#define S3C_NFCONT_LOCKSOFT	(1<<16)
+#define S3C_NFCONT_MECCLOCK	(1<<7)
+#define S3C_NFCONT_SECCLOCK	(1<<6)
+#define S3C_NFCONT_INITMECC	(1<<5)
+#define S3C_NFCONT_INITSECC	(1<<4)
+#define S3C_NFCONT_nFCE1	(1<<2)
+#define S3C_NFCONT_nFCE0	(1<<1)
+#define S3C_NFCONT_INITECC	(S3C_NFCONT_INITSECC | S3C_NFCONT_INITMECC)
+
+#define S3C_NFSTAT_ECCENCDONE	(1<<7)
+#define S3C_NFSTAT_ECCDECDONE	(1<<6)
+#define S3C_NFSTAT_ILEGL_ACC	(1<<5)
+#define S3C_NFSTAT_RnB_CHANGE	(1<<4)
+#define S3C_NFSTAT_nFCE1	(1<<3)
+#define S3C_NFSTAT_nFCE0	(1<<2)
+#define S3C_NFSTAT_Res1		(1<<1)
+#define S3C_NFSTAT_READY	(1<<0)
+#define S3C_NFSTAT_CLEAR	((1<<7) |(1<<6) |(1<<5) |(1<<4))
+#define S3C_NFSTAT_BUSY		(1<<0)
+
+#define S3C_NFECCERR0_ECCBUSY	(1<<31)
+
+#endif /* __ASM_ARM_REGS_S5P_NAND */
+

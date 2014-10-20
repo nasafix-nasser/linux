@@ -1158,6 +1158,12 @@ MODULE_LICENSE ("GPL");
 #define	PLATFORM_DRIVER		ehci_atmel_driver
 #endif
 
+#if defined(CONFIG_ARCH_S5PV210) || defined(CONFIG_ARCH_S5P6450) || \
+    defined(CONFIG_ARCH_S5PV310)
+#include "ehci-s5pv210.c"
+#define PLATFORM_DRIVER		ehci_hcd_s5pv210_driver
+#endif
+
 #if !defined(PCI_DRIVER) && !defined(PLATFORM_DRIVER) && \
     !defined(PS3_SYSTEM_BUS_DRIVER) && !defined(OF_PLATFORM_DRIVER) && \
     !defined(XILINX_OF_PLATFORM_DRIVER)

@@ -221,6 +221,7 @@ static void flush_fifo(struct s3c64xx_spi_driver_data *sdd)
 	val = readl(regs + S3C64XX_SPI_CH_CFG);
 	val &= ~(S3C64XX_SPI_CH_RXCH_ON | S3C64XX_SPI_CH_TXCH_ON);
 	writel(val, regs + S3C64XX_SPI_CH_CFG);
+	writel(S3C64XX_SPI_PND_TRAILING_CLR, regs + S3C64XX_SPI_PENDING_CLR);
 }
 
 static void enable_datapath(struct s3c64xx_spi_driver_data *sdd,
@@ -326,10 +327,11 @@ static int wait_for_xfer(struct s3c64xx_spi_driver_data *sdd,
 		val = msecs_to_jiffies(ms) + 10;
 		val = wait_for_completion_timeout(&sdd->xfer_completion, val);
 	} else {
+		u32 status;
 		val = msecs_to_loops(ms);
 		do {
-			val = readl(regs + S3C64XX_SPI_STATUS);
-		} while (RX_FIFO_LVL(val, sci) < xfer->len && --val);
+			status = readl(regs + S3C64XX_SPI_STATUS);
+		} while (RX_FIFO_LVL(status, sci) < xfer->len && --val);
 	}
 
 	if (!val)
@@ -508,7 +510,7 @@ static int s3c64xx_spi_map_mssg(struct s3c64xx_spi_driver_data *sdd,
 	list_for_each_entry(xfer, &msg->transfers, transfer_list) {
 
 		if (xfer->tx_buf != NULL) {
-			xfer->tx_dma = dma_map_single(dev, xfer->tx_buf,
+			xfer->tx_dma = dma_map_single(dev,(void *)xfer->tx_buf,
 						xfer->len, DMA_TO_DEVICE);
 			if (dma_mapping_error(dev, xfer->tx_dma)) {
 				dev_err(dev, "dma_map_single Tx failed\n");
