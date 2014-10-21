@@ -940,7 +940,6 @@ static struct s3cfb_lcd vga = {
 		.inv_vsync	= 0,
 		.inv_vden	= 0,
 	},
-
 };
 
 static void vga_cfg_gpio(struct platform_device *pdev)
