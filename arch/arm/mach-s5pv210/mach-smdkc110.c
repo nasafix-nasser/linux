@@ -904,9 +904,9 @@ static struct s3cfb_lcd vga = {
 	.height	= 768,
 #endif
 	.bpp	= 24,
-	.freq	= 60,
+	.freq	= 70,
 
-	.timing = {
+/*	.timing = {
 		.h_fp	= 10,
 		.h_bp	= 20,
 		.h_sw	= 10,
@@ -923,6 +923,24 @@ static struct s3cfb_lcd vga = {
 		.inv_vsync	= 1,
 		.inv_vden	= 0,
 	},
+*/
+	.timing = {
+		.h_fp	= 40,
+		.h_bp	= 88,
+		.h_sw	= 128,
+		.v_fp	= 1,
+		.v_fpe	= 1,
+		.v_bp	= 23,
+		.v_bpe	= 1,
+		.v_sw	= 4,
+	},
+	.polarity = {
+		.rise_vclk	= 0,
+		.inv_hsync	= 0,
+		.inv_vsync	= 0,
+		.inv_vden	= 0,
+	},
+
 };
 
 static void vga_cfg_gpio(struct platform_device *pdev)
